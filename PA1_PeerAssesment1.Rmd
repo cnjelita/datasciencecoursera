@@ -12,6 +12,7 @@ head(activity)
 str(activity)
 summary(activity)
 ```
+
 ## What is mean total number of steps taken per day?
 ```{r, echo=TRUE}
 total_steps <- tapply(activity$steps, activity$date, sum, na.rm=T)
@@ -46,7 +47,6 @@ sprintf("%02d:%02d", floor(max_act_int/60), max_act_int %% 60)
 ```
 
 ## Imputing missing values
-
 ```{r, echo=TRUE}
 sum(is.na(activity))
 impute <- transform(activity, steps=ifelse(is.na(steps), avg_steps, steps))
@@ -65,37 +65,9 @@ hist(total_impsteps, breaks=11,
 abline(v=impstep_mean, col="red", lwd=3)
 abline(v=impstep_median, col="blue", lwd=3, lty=2)
 legend(x="topright", legend=c("mean","median"), col=c("red","blue"), bty="n", lwd=3)
-
-###Due to imputation the total sum of steps in these two month increases from 570608 to 6.5674 × 105
 sum(activity$steps, na.rm=TRUE)
 sum(impute$steps)
 ```
 
-## Are there differences in activity patterns between weekdays and weekends?
-```{r, echo=True}
-weekday.or.weekend <- function(date) {
-    day <- weekdays(date)
-    if (day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")) 
-        return("weekday") else if (day %in% c("Saturday", "Sunday")) 
-        return("weekend") else stop("invalid date")
-}
 
-daytype <- function(date) {
-    if (weekdays(as.Date(date)) %in% c("Saturday", "Sunday")) {
-        "weekend"
-    } else {
-        "weekday"
-    }
-}
-activity$daytype <- as.factor(sapply(activity$date, daytype))
-
-### Plot containing plots of average number of steps taken on weekdays and weekends.
-
-par(mfrow = c(2, 1))
-for (type in c("weekend", "weekday")) {
-    steps.type <- aggregate(steps ~ interval, data = activity, subset = activity$daytype == 
-        type, FUN = mean)
-    plot(steps.type, type = "l", main = type)
-}
-```
 
