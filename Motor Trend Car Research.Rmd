@@ -1,0 +1,106 @@
+---
+author: "Charles Njelita"
+date: "Friday, August 22, 2014"
+output: html_document
+---
+## Executive summary
+
+Motor Trend is a magazine about the automobile industry. Looking at a data set of a 
+collection of cars, they are interested in exploring the relationship between a set of 
+variables and miles per gallon (MPG) (outcome). They are particularly interested in the following 
+two questions: 
+    (1) Is an automatic or manual transmission better for MPG?
+    (2) Quantify the MPG difference between automatic and manual transmissions.
+Based on the hypothesis testing and simple linear regression, we can conclude that there is a signficant difference between the mean MPG for automatic and manual transmission cars. To adjust for other confounding variables such as the weight and quarter mile time (acceleration) of the car, multivariate regression analysis was ran to understand the impact of transmission type on MPG. The final model results indicates that weight and quarter mile time (acceleration) have signficant impact in quantifying the difference of mpg between automatic and manual transmission cars.
+
+## Explorolatory Data Analysis
+Motor trend dataset 'mtcars' was automatically loaded into the R Markdown workspace see <http://rmarkdown.rstudio.com> for details. Thus, we commenced our data exploration automatical without any data download.
+```{r, echo=TRUE}
+data(mtcars)
+dim(mtcars)
+head(mtcars)
+names(mtcars)
+```
+## Is an automatic or manual transmission better for MPG?
+We see that Mtcars dataset dimension are 11 variables and 32 data points (rows), since we are interested in the relationshp between mpg and other variables, we first check the correlation between mpg and other variablesSince one of our predictor variable 'am' is a categorical varianle (i.e. O=Automatic or 1=Manual), we are required to set as a factor variable as below: 
+```{r, ECHO-TRUE}
+mtcars$am <- as.factor(mtcars$am)
+levels(mtcars$am) <- c("Automatic", "Manual")
+```
+## T-Test
+We created boxplot to examine the relationship between mpg and am type (Appendix 1) and it seems automatic car has better mpg compared with manual cars.# To perform a statistical analysis to support this hypothesis, we use t-test below:
+```{r, ECHO=TRUE}
+t.test(mtcars$mpg~mtcars$am,conf.level=0.95)
+```
+## Correlation analysis
+```{r, echo=TRUE}
+data(mtcars)
+# mtcars[,-1] is the dataframe without mpg
+cor(mtcars$mpg,mtcars[,-1])
+lm(data = mtcars, mpg ~ .)
+```
+## Simple Step Linear Regression for Variable Selection
+```{r}
+fit <- lm(mpg~am, data = mtcars)
+summary(fit)
+anova(fit)
+```
+#Stepwise Linear Regression for Variable Selection
+```{r, echo=TRUE}
+stepmodel = step(lm(data = mtcars, mpg ~ .),trace=0,steps=100)
+summary(stepmodel)
+```
+# To further optimize our model, we examine mpg ~ wt + qsec and controled by am
+```{r, echo=TRUE}
+model <- lm(mpg~ factor(am):wt + factor(am):qsec,data=mtcars)
+summary(model)
+```
+# Best Fit regression model that quantifies the mpg difference between automatic and manual transmission
+```{r, echo=TRUE}
+bestfit <- lm(mpg~am + wt + qsec, data = mtcars)
+summary(bestfit)
+anova(fit, bestfit)
+```
+## Summary Result
+This model explains 84% of the variance in miles per gallon (mpg). Moreover, we see that wt and qsec 
+did indeed confound the relationship between am and mpg. Now when we read the coefficient for am, we say that, on average, manual transmission cars have 2.94 MPGs more than automatic transmission cars. However this effect is much lower than when we did not adjust for weight and qsec.
+
+#3 Conclusion
+Therefore, based on the above analysis, the question of auto car and manual car is not anwsered and have to be considered in the context of weight and accelaration speed.
+
+## APPENDIX: Plots
+We embeded plots of our initial exploratory data analysis below to understand the mtcars distribution function which is normal as depicted in the histogram below:
+```{r, echo=TRUE}
+plot(cars)
+par(mfrow = c(1, 2))
+# Histogram with Normal Curve
+x <- mtcars$mpg
+h<-hist(x, breaks=10, col="red", xlab="Miles Per Gallon",
+   main="Histogram of Miles per Gallon")
+xfit<-seq(min(x),max(x),length=40)
+yfit<-dnorm(xfit,mean=mean(x),sd=sd(x))
+yfit <- yfit*diff(h$mids[1:2])*length(x)
+lines(xfit, yfit, col="blue", lwd=2)
+```
+# Kernel Density Plot
+```{r, echo=TRUE}
+d <- density(mtcars$mpg)
+plot(d, xlab = "MPG", main ="Density Plot of MPG")
+```
+# Boxplot: barplot for mpg vs transmission type 
+```{r, echo=TRUE}
+boxplot(mpg~am, data = mtcars,
+        col = c("dark grey", "light grey"),
+        xlab = "Transmission",
+        ylab = "Miles per Gallon",
+        main = "MPG by Transmission Type")
+```
+# we got a model which includes 3 variables wt, qsec and am. This model captured 0.85 of total variance. 
+# To further optimize our model, we examine mpg ~ wt + qsec and controled by am
+```{r, echo=TRUE}
+par(mfrow=c(2,2))    
+plot(model)
+```
+
+Note that the `echo = TRUE` parameter was added to the code chunk to allow printing of the R code that generated the plot.
+
