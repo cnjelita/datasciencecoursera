@@ -1,5 +1,13 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+datasciencecoursera
+===================
+
+Repository for all data science coursera materials.
+=======
+>>>>>>> 63555b14dcfb5ea3ed8e9b545c4b3ca82a4448c9
 ## Introduction
 
 It is now possible to collect a large amount of data about personal
@@ -208,6 +216,7 @@ https://github.com/rdpeng/RepData_PeerAssessment1
 
 7c376cc5447f11537f8740af8e07d6facc3d9645
 ```
+<<<<<<< HEAD
 =======
 datasciencecoursera
 ===================
@@ -289,3 +298,6 @@ The four plots that you will need to construct are shown below.
 ![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5.png) 
 
 >>>>>>> 73fe5c675a2db951b302bfd68524bf7a56094d46
+=======
+>>>>>>> dc20c7c4e92aea6af318a611e2669d5b9c6cbfaf
+>>>>>>> 63555b14dcfb5ea3ed8e9b545c4b3ca82a4448c9
