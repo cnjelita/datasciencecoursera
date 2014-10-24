@@ -1,0 +1,90 @@
+---
+title: "Practical Machine Learining: Human Activity Recognition Model"
+author: "Charles Njelita"
+date: "Monday, October 20, 2014"
+output: html_document
+---
+
+## Executive Summary
+Capturing human activities Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. 
+
+One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. The aim of this report was to use data from accelerometers placed on the belt, forearm, arm, and dumbell of six participants to predict how well they were doing the exercise in terms of data classification. 
+Thus, we can quantify and predict an individual activities with  Sensitivity between (0.9970 - 100%) and specificity of 100%.
+
+```{r, echo=TRUE}
+library(caret)
+library(corrplot)
+library(kernlab)
+library(knitr)
+library(corrplot)
+library(randomForest)
+opts_chunk$set(cache = FALSE)
+```
+
+
+```{r, echo=TRUE}
+# The training data was then loaded into R.
+# read the csv file for training 
+data_training <- read.csv("C:/Users/Charles/Desktop/Coursera/machine_Learning/data/pml-training.csv", na.strings= c("NA",""," "))
+# data_training <- read.csv(".\data\pml-training.csv", )
+# There was a lot of NA values in the data which would create a lot of noise for the model. As a result, these columns were removed from the data set. The first eight columns that acted as identifiers for the experiment were also removed.
+
+# clean the data by removing columns with NAs etc
+data_training_NAs <- apply(data_training, 2, function(x) {sum(is.na(x))})
+data_training_clean <- data_training[,which(data_training_NAs == 0)]
+
+# remove identifier columns such as name, timestamps etc
+data_training_clean <- data_training_clean[8:length(data_training_clean)]
+```
+
+## Creating a model
+The test data set was split up into training and cross validation sets in a 70:30 ratio in order to train the model and then test it against data it was not specifically fitted to.
+```{r, echo=TRUE}
+# split the cleaned testing data into training and cross validation
+inTrain <- createDataPartition(y = data_training_clean$classe, p = 0.7, list = FALSE)
+training <- data_training_clean[inTrain, ]
+crossval <- data_training_clean[-inTrain, ]
+```
+A random forest model was selected to predict the classification because it has methods for balancing error in class population unbalanced data sets. The correlation between any two trees in the forest increases the forest error rate. Therefore, a correllation plot was produced in order to see how strong the variables relationships are with each other.
+## Plot correlation matrix
+```{r, echo=FALSE}
+ # plot a correlation matrix
+correlMatrix <- cor(training[, -length(training)])
+corrplot(correlMatrix, order = "FPC", method = "circle", type = "lower", tl.cex = 0.8,  tl.col = rgb(0, 0, 0))
+```
+
+## Fit a Model
+In this type of plot the dark red and blue colours indicate a highly negative and positive relationship respectively between the variables. There isn't much concern for highly correlated predictors which means that all of them can be included in the model.
+Then a model was fitted with the outcome set to the training class and all the other variables used to predict.
+```{r, echo=TRUE}
+# fit a model to predict the classe using everything else as a predictor
+model <- randomForest(classe ~ ., data = training)
+model
+```
+The model produced a very small OOB error rate of .56%. This was deemed satisfactory enough to progress the testing.
+
+## Cross-validation
+The model was then used to classify the remaining 30% of data. The results were placed in a confusion matrix along with the actual classifications in order to determine the accuracy of the model.
+```{r, echo=TRUE}
+# crossvalidate the model using the remaining 30% of data
+predictCrossVal <- predict(model, crossval)
+confusionMatrix(crossval$classe, predictCrossVal)
+```
+
+## Predictions
+A separate data set was then loaded into R and cleaned in the same manner as before. The model was then used to predict the classifications of the 20 results of this new data.
+```{r, echo=TRUE}
+# apply the same treatment to the final testing data
+data_test <- read.csv("C:/Users/Charles/Desktop/Coursera/machine_Learning/data//pml-testing.csv", na.strings= c("NA",""," "))
+data_test_NAs <- apply(data_test, 2, function(x) {sum(is.na(x))})
+data_test_clean <- data_test[,which(data_test_NAs == 0)]
+data_test_clean <- data_test_clean[8:length(data_test_clean)]
+
+# predict the classes of the test set
+predictTest <- predict(model, data_test_clean)
+predictTest
+```
+
+## Conclusions
+With the abundance of information given from multiple measuring instruments it's possible to accurately predict how well a person is preforming an excercise using a relatively simple model.
+
