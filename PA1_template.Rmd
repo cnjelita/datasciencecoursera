@@ -1,0 +1,101 @@
+# Reproducible Research: Peer Assessment 1
+author: "Charles Njelita"
+date: "Tuesday, August 12, 2014"
+output: html_document
+
+## Loading and preprocessing the data
+```{r, echo=TRUE}
+setwd("C:/Users/Charles/Desktop/Coursera/Reproduceable Research/repdata-data-activity")
+activity <- read.csv("activity.csv")
+dateDownloaded <- date()
+head(activity)
+str(activity)
+summary(activity)
+```
+## What is mean total number of steps taken per day?
+```{r, echo=TRUE}
+total_steps <- tapply(activity$steps, activity$date, sum, na.rm=T)
+step_mean <- mean(total_steps)
+step_mean
+step_median <- median(total_steps)
+step_median
+
+hist(total_steps, breaks=11, 
+     xlab="number of steps per day", 
+     main="Histogram of total steps per day")
+abline(v=step_mean, col="red", lwd=3)
+abline(v=step_median, col="blue", lwd=3)
+legend(x="topright", legend=c("mean","median"), col=c("red","blue"), bty="n", lwd=3)
+```
+
+
+## What is the average daily activity pattern?
+```{r, echo=TRUE}
+avg_steps <- tapply(activity$steps, activity$interval, mean, na.rm=T)
+hours <- as.numeric(names(avg_steps))/60
+plot(hours, avg_steps, type="l", axes=F,
+     xlab="time of day (h)", ylab="average number of steps in 5-min interval",
+     main="Daily activity pattern")
+axis(2)
+axis(1, at=0:6*4, labels=paste(0:6*4,":00", sep=""))
+
+### The maximum number of steps occurs in the 5-minutes interval starting at
+max_act_num <- which(avg_steps==max(avg_steps))
+max_act_int <- activity$interval[max_act_num]
+sprintf("%02d:%02d", floor(max_act_int/60), max_act_int %% 60)
+```
+
+## Imputing missing values
+
+```{r, echo=TRUE}
+sum(is.na(activity))
+impute <- transform(activity, steps=ifelse(is.na(steps), avg_steps, steps))
+summary(impute)
+
+total_impsteps <- tapply(impute$steps, impute$date, sum, na.rm=T)
+impstep_mean <- mean(total_impsteps)
+impstep_mean
+impstep_median <- median(total_impsteps)
+impstep_median
+
+hist(total_impsteps, breaks=11, 
+     xlab="number of steps per day", 
+     sub="(missing values imputed)",
+     main="Histogram of total steps per day")
+abline(v=impstep_mean, col="red", lwd=3)
+abline(v=impstep_median, col="blue", lwd=3, lty=2)
+legend(x="topright", legend=c("mean","median"), col=c("red","blue"), bty="n", lwd=3)
+
+###Due to imputation the total sum of steps in these two month increases from 570608 to 6.5674 × 105
+sum(activity$steps, na.rm=TRUE)
+sum(impute$steps)
+```
+
+## Are there differences in activity patterns between weekdays and weekends?
+```{r, echo=True}
+weekday.or.weekend <- function(date) {
+    day <- weekdays(date)
+    if (day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")) 
+        return("weekday") else if (day %in% c("Saturday", "Sunday")) 
+        return("weekend") else stop("invalid date")
+}
+
+daytype <- function(date) {
+    if (weekdays(as.Date(date)) %in% c("Saturday", "Sunday")) {
+        "weekend"
+    } else {
+        "weekday"
+    }
+}
+activity$daytype <- as.factor(sapply(activity$date, daytype))
+
+### Plot containing plots of average number of steps taken on weekdays and weekends.
+
+par(mfrow = c(2, 1))
+for (type in c("weekend", "weekday")) {
+    steps.type <- aggregate(steps ~ interval, data = activity, subset = activity$daytype == 
+        type, FUN = mean)
+    plot(steps.type, type = "l", main = type)
+}
+```
+
